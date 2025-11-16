@@ -15,6 +15,14 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 
+// CORS must be before other middleware
+app.use(cors({ 
+  origin: ['http://localhost:5173', 'https://auth-frontend-ee5a.onrender.com'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
 
@@ -32,35 +40,25 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth', authLimiter);
 
-// Fix CORS for Render deployment
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
-  process.env.ALLOWED_ORIGINS.split(',') : 
-  ['http://localhost:5173', 'https://auth-frontend-ee5a.onrender.com'];
-
-app.use(cors({ 
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true 
-}));
-
+// Routes
 app.use('/api/auth', authRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/', (req, res) => {
+  res.json({ message: 'Auth API is running' });
+});
+
+// Error handlers
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
 app.use('*', (req, res) => {
+  console.log('404 - Route not found:', req.originalUrl);
   res.status(404).json({ message: 'Route not found' });
 });
 
@@ -72,6 +70,11 @@ mongoose.connect(MONGO_URI)
     console.log('MongoDB connected');
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log('Available routes:');
+      console.log('POST /api/auth/register');
+      console.log('POST /api/auth/login');
+      console.log('GET /api/auth/me');
+      console.log('POST /api/auth/logout');
     });
   })
   .catch(err => {
