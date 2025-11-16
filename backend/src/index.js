@@ -32,12 +32,20 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth', authLimiter);
 
+// Fix CORS for Render deployment
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
   process.env.ALLOWED_ORIGINS.split(',') : 
-  ['http://localhost:5173'];
+  ['http://localhost:5173', 'https://auth-frontend-ee5a.onrender.com'];
 
 app.use(cors({ 
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true 
 }));
 
