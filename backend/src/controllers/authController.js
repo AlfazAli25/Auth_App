@@ -10,7 +10,7 @@ exports.register = async (req, res) => {
     const { name, email, password } = req.body;
     
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'All fields required' });
+      return res.status(400).json({ message: 'All fields are required' });
     }
     
     if (password.length < 6) {
@@ -42,7 +42,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password required' });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
     const user = await User.findOne({ email }).select('+password');
@@ -81,5 +81,5 @@ exports.me = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-  res.json({ message: 'Logged out' });
+  res.json({ message: 'Logged out successfully' });
 };
